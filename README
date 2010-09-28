@@ -1,0 +1,37 @@
+###################################
+#             WARNING!            #
+#      This is totally ALPHA!     #
+###################################
+
+This is totally ALPHA!
+
+
+
+
+
+###################################
+#              Info               #
+###################################
+
+AIMA-Ruby is based on AIMA-Phython.
+
+- It's is under develpment.
+
+- It's incomplete.
+
+- Not all the stuff (methods/class) here works.
+
+
+
+
+
+###################################
+#           Example               #
+###################################
+
+Execute this:
+
+AIMA-Ruby$ ruby leiz_misioneros.rb
+
+It gonna return the goal node corresponding for the 
+Missionaries and Cannibals Problem
