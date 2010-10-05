@@ -181,14 +181,8 @@ def graph_search(problem, fringe)
   
   closed = {}
   fringe << Node.new(problem.initial)
-  c = 0
   while not fringe.empty?
-    puts fringe.empty?
-    puts fringe.length
     node = fringe.pop
-    puts c+=1
-    puts node
-    puts "-----------------"
     if problem.goal_test node.state
       return node
     end
@@ -239,7 +233,6 @@ def astar_search(problem, h=nil)
   # You need to specify the h function when you call astar_search.
   # Uses the pathmax trick: f(n) = max(f(n), g(n)+h(n)).
   h = h or problem.method(:h)
-  puts "AHHHHHH" unless h.nil?
   
   f = proc{|n| [(n.respond_to?(:f) ? n.method(:f) : -$infinity), n.path_cost + h.call(n)].max}
   
