@@ -113,7 +113,7 @@ class Node
   def expand(problem)
     # Return a list of nodes reachable from this node. [Fig. 3.8]
     list = []
-    for act,next_ in problem.successor(self.state) do
+    problem.successor(self.state).each do |act, next_|
       list << Node.new(next_, self, act, problem.path_cost(self.path_cost, self.state, act, next_))
     end
     return list
@@ -181,10 +181,14 @@ def graph_search(problem, fringe)
   
   closed = {}
   fringe << Node.new(problem.initial)
-  
-  while fringe
+  c = 0
+  while not fringe.empty?
+    puts fringe.empty?
+    puts fringe.length
     node = fringe.pop
-    
+    puts c+=1
+    puts node
+    puts "-----------------"
     if problem.goal_test node.state
       return node
     end
@@ -223,22 +227,21 @@ def best_first_graph_search(problem, f)
   # There is a subtlety: the line "f = memoize(f, 'f')" means that the f
   # values will be cached on the nodes as they are computed. So after doing
   # a best first search you can examine the f values of the path returned.
-  f = memoize(f, '@f')
-  return graph_search(problem, PriorityQueue.new(min, f))
+  #f = memoize(f, '@f')
+  return graph_search(problem, PriorityQueue.new(:min, f))
 end
   
 greedy_best_first_graph_search = method :best_first_graph_search
   # Greedy best-first search is accomplished by specifying f(n) = h(n).
   
-def astar_search(problem, h=None)
+def astar_search(problem, h=nil)
   # A* search is best-first graph search with f(n) = g(n)+h(n).
   # You need to specify the h function when you call astar_search.
   # Uses the pathmax trick: f(n) = max(f(n), g(n)+h(n)).
-  h = h or problem.h
+  h = h or problem.method(:h)
+  puts "AHHHHHH" unless h.nil?
   
-  def f(n)
-    return max(getattr(n, 'f', -infinity), n.path_cost + h(n))
-  end
+  f = proc{|n| [(n.respond_to?(:f) ? n.method(:f) : -$infinity), n.path_cost + h.call(n)].max}
   
   return best_first_graph_search(problem, f)
 end

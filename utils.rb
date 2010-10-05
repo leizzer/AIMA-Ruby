@@ -1,4 +1,7 @@
-
+#______________________________________________________________________________
+# Simple Data Structures: infinity, Dict, Struct
+                
+$infinity = 1.0e300
 
 =begin
 ### problem ####
@@ -95,7 +98,7 @@ class FIFOQueue < A_Queue
     e = @A[@start]
     
     @start += 1
-######### I DONT UNDERSTUND WHY!! ########
+
     if @start > 5 && @start > @A.length/2
       @A = @A[@start .. @A.length - 1] || @A
       @start = 0
@@ -154,6 +157,12 @@ class PriorityQueue < A_Queue
   end
   
   def concat(items)
-    @A.concat items
+    items.each do |item|
+      self.<< item
+    end
+  end
+  
+  def to_s
+    puts @A
   end
 end
