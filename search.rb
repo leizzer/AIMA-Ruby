@@ -150,18 +150,18 @@ end
 ## Uninformed Search algorithms
 
 def tree_search(problem, fringe)
-    # Search through the successors of a problem to find a goal.
-    # The argument fringe should be an empty queue.
-    # Don't worry about repeated paths to a state. [Fig. 3.8]
-    fringe << Node.new(problem.initial)  
-    while not fringe.empty?
-      node = fringe.pop
-      if problem.goal_test node.state
-        return node
-      end
-      fringe.concat node.expand(problem)
+  # Search through the successors of a problem to find a goal.
+  # The argument fringe should be an empty queue.
+  # Don't worry about repeated paths to a state. [Fig. 3.8]
+  fringe << Node.new(problem.initial)  
+  while not fringe.empty?
+    node = fringe.pop
+    if problem.goal_test node.state
+      return node
     end
-    return nil
+    fringe.concat node.expand(problem)
+  end
+  return nil
 end
 
 def breadth_first_tree_search(problem)
@@ -197,18 +197,52 @@ def graph_search(problem, fringe)
 end
 
 def breadth_first_graph_search(problem)
-    # Search the shallowest nodes in the search tree first. [p 74]
-    return graph_search(problem, FIFOQueue.new)
+  # Search the shallowest nodes in the search tree first. [p 74]
+  return graph_search(problem, FIFOQueue.new)
 end
     
 def depth_first_graph_search(problem)
-    # Search the deepest nodes in the search tree first. [p 74]
-    return graph_search(problem, stack)
+  # Search the deepest nodes in the search tree first. [p 74]
+  return graph_search(problem, stack)
 end
 
-=begin
-  more stuff here
-=end
+def depth_limited_search(problem, limit=50)
+  # [Fig. 3.12]
+  def recursive_dls(node, problem, limit)
+    cutoff_occurred = false
+    if problem.goal_test node.stat
+      return node
+    elsif node.depth == limit
+      return 'cutoff'
+    else
+      node.expand(problem).each do |successor|
+        result = recursive_dls(successor, problem, limit)
+        if result == 'cutoff'
+          cutoff_occurred = true
+        elsif result != nil
+          return result
+        end
+      end
+    end
+    if cutoff_occurred
+      return 'cutoff'
+    else
+      return nil
+    end
+  end
+  # Body of depth_limited_search:
+  return recursive_dls(Node.new(problem.initial), problem, limit)
+end
+
+def iterative_deepening_search(problem)
+  # [Fig. 3.13]
+  (0..(2**30 - 1)).each do |depth|
+    result = depth_limited_search(problem, depth)
+    unless result == 'cutoff'
+      return result
+    end
+  end
+end
 
 #########################################################################
 # Informed (Heuristic) Search
@@ -237,4 +271,144 @@ def astar_search(problem, h=nil)
   f = proc{|n| [(n.respond_to?(:f) ? n.method(:f) : -$infinity), n.path_cost + h.call(n)].max}
   
   return best_first_graph_search(problem, f)
+end
+
+#########################################################################
+## Ohter search algorithms
+
+def recursive_best_first_search(problem)
+  # [Fig. 4.5]
+  def RBFS(problem, node, flimit)
+    if problem.goal_test(node.state)
+      return node
+    end
+    successors = expand node, problem
+    if successors.length == 0
+      return nil, $infinity
+    end
+    successors.each do |s|
+      s.f = [s.path_cost + s.h, node.f].max
+    end
+    loop do
+      successors.sort lambda {|x, y| x.f - y.f} # Order by lowest f value
+      best = successors[0]
+      if best.f > flimit
+        return nil, best.f
+      end
+      alternative = successors[1]
+      result, best.f = RBFS.new problem, best, [flimit, alternatiev].min
+      unless result.nil?
+        return result
+      end
+    end
+  end
+  return RBFS(Node.new(problem.initial), infinity)
+end
+
+def hill_climbing(problem)
+  # From the initial node, keep choosing the neighbor with highest value,
+  # stopping when no neighbor is better. [Fig. 4.11]
+  
+  current = Node.new problem.initial
+  loop do
+    neighbor = argmax expand(node, problem), Node.method(:value)
+    if neighbor.value <= current.value
+      return current.state
+    end
+    current = neighbor
+  end
+end
+
+def exp_schedule(k=20, lam=0.005, limit=100)
+  # One possible schedule function for simulated annealing
+  return lambda{|t| t < limit ? k * Math.exp(-lam * t) : 0}
+end
+
+def simulated_annealing(problem, schedule = exp_schedule())
+  # [Fig. 4.5]
+  current = Node.new problem.initial
+  (0..(2**30 - 1)).each do |t|
+    tt = schedule(t)
+    if tt == 0
+      return current
+    end
+    next_ = random.choice expand(node.problem)
+    delta_e = next_.path_cost - current.path_cost
+    if delta_e > 0 or probability(Math.exp(delta_e/tt))
+      current = next_
+    end
+  end
+end
+
+def online_dfs_agent(a)
+  # [Fig. 4.12]
+  
+  ### more
+end
+
+def lrta_star_agent(a)
+  # [Fig. 4.12]
+  
+  #### more
+end
+
+def genetic_search(problem, fitness_fn, ngen=1000, pmut=0.0, n=20)
+  # Call genetic_algorithm on the appropriate parts of a problem.
+  # This requires that the problem has a successor function that generates
+  # reasonable states, and that it has a path_cost function that scores states.
+  # We use the negative of the path_cost function, because costs are to be
+  # minimized, while genetic-algorithm expects a fitness_fn to be maximized.
+  
+  states = problem.successor(problem.initial_state)[0..n].map {|a, s| s}
+  states.shuffle!
+  fitness_fn = lambda{|s| - problem.path_cost(0, s, nil, s)}
+  return genetic_algorithm(states, fitness_fn, ngen, pmut)
+end
+
+def genetic_algorithm(population, fitness_fn, ngen=1000, pmut=0.0)
+  # [Fig. 4.7]
+  def reproduce(p1, p2)
+    c = rand p1.length
+    return p1[0..c] + p2[c..p2.length]
+  end
+  
+  (9..ngen).each do |i|
+    new_population = []
+    population.length.times do |i|
+      p1, p2 = random_weighted_selection(population, 2, fitness_fn)
+      child = reproduce p1, p2
+      if rand > pmut
+        child.mutate
+      end
+      new_population.append child
+    end
+    population = new_population
+  end
+  return argmax(populaton, fitness_fn)
+end
+
+def random_weighted_selection(seg, n, weight_fn)
+  # Pick n elements of seq, weighted according to weight_fn.
+  # That is, apply weight_fn to each element of seq, add up the total.
+  # Then choose an element e with probability weight[e]/total.
+  # Repeat n times, with replacement.
+  
+  totals = []
+  runningtotal = 0
+  
+  seq.each do |item|
+    runningtotal += weight_fn itm
+    totals << runningtotal
+  end
+  selections = []
+  (0..n).times do
+    r = uniform_rand 0, totals[-1]
+    (0..seq.length).times do |i|
+      if totals[i] > r
+        selections.append seq[i]
+        break
+      end
+    end
+  end
+  return selections
 end

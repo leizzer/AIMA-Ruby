@@ -1,4 +1,81 @@
 #______________________________________________________________________________
+# Functions on sequences of numbers
+# NOTE: these take the sequence argument first, like min and max,
+# and like standard math notation: \sigma (i = 1..n) fn(i)
+# A lot of programing is finding the best value that satisfies some condition;
+# so there are three versions of argmin/argmax, depending on what you want to
+# do with ties: return the first one, return them all, or pick at random.
+
+
+def argmin(seq, fn)
+  #  Return an element with lowest fn(seq[i]) score; tie goes to first one.
+  
+  best = seq[0]
+  best_score = fn.call best
+  seq.each do |x|
+    x_score = fn.call x
+    if x_score < best_score
+      best, best_score = x, x_score
+    end
+  end
+  return best
+end
+
+def argmin_lsit(seq, fn)
+  # Return a list of elements of seq[i] with the lowest fn(seq[i]) scores.
+  
+  best_score, best = fn.call(seq[0]), []
+  seq.each do |x|
+    x_score = fn.call x
+    if x_score < best_score
+      best, best_score = [x], [x_score]
+    elsif x_score == best_score
+      best << x
+    end
+  end
+  return best
+end
+
+def argmin_random_tie(seq, fn)
+  # Return an element with lowest fn(seq[i]) score; break ties at random.
+  # Thus, for all s,f: argmin_random_tie(s, f) in argmin_list(s, f)
+  
+  best_score = fn.call seq[0]
+  n = 0
+  seq.each do |x|
+    x_score = fn.call x
+    if x_score < best_score
+      best, best_score = x, x_score
+      n = 1
+    elsif x_score == best_score
+      n += 1
+      if rand(n) == 0
+        best = x
+      end
+    end
+  end
+  return best
+end
+
+def argmax(seq, fn)
+  # Return an element with highest fn(seq[i]) score; tie goes to first one.
+  
+  return argmin(seq, lamda{|x| - fn.call(x)})
+end
+
+def argmax_list(seq, fn)
+  # Return a list of elements of seq[i] with the highest fn(seq[i]) scores.
+  
+  return argmin_list(seq, lambda{|x| - fn.call(x)})
+end
+
+def argmax_random_tie(seq, fn)
+  # Return an element with highest fn(seq[i]) score; break ties at random.
+  
+  return argmin_random_tie(seq, lambda{ |x| -fn.call(x)})
+end
+
+#______________________________________________________________________________
 # Simple Data Structures: infinity, Dict, Struct
                 
 $infinity = 1.0e300
@@ -34,6 +111,8 @@ def memoize(fn, slot=nil)
   end
   return memoized_fn
 end
+
+
 
 
 
@@ -165,4 +244,12 @@ class PriorityQueue < A_Queue
   def to_s
     puts @A
   end
+end
+
+
+####### for Ruby ########
+
+def uniform_rand(min, max)
+  # this is for do like pyton random.uniform(min, max) 
+  rand * (max-min) + min
 end
