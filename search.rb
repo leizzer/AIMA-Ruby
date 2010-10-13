@@ -278,7 +278,7 @@ end
 
 def recursive_best_first_search(problem)
   # [Fig. 4.5]
-  def RBFS(problem, node, flimit)
+  def rbfs(problem, node, flimit)
     if problem.goal_test(node.state)
       return node
     end
@@ -296,13 +296,13 @@ def recursive_best_first_search(problem)
         return nil, best.f
       end
       alternative = successors[1]
-      result, best.f = RBFS.new problem, best, [flimit, alternatiev].min
+      result, best.f = rbfs problem, best, [flimit, alternatiev].min
       unless result.nil?
         return result
       end
     end
   end
-  return RBFS(Node.new(problem.initial), infinity)
+  return rbfs(Node.new(problem.initial), infinity)
 end
 
 def hill_climbing(problem)
@@ -412,3 +412,110 @@ def random_weighted_selection(seg, n, weight_fn)
   end
   return selections
 end
+
+#########################################################################
+# The remainder of this file implements examples for the search algorithms.
+
+#########################################################################
+# Graphs and Graph Problems
+
+class Graph
+  #  A graph connects nodes (verticies) by edges (links).  Each edge can also
+  #  have a length associated with it.  The constructor call is something like:
+  #      g = Graph({'A': {'B': 1, 'C': 2})   
+  #  this makes a graph with 3 nodes, A, B, and C, with an edge of length 1 from
+  #  A to B,  and an edge of length 2 from A to C.  You can also do:
+  #      g = Graph({'A': {'B': 1, 'C': 2}, directed=False)
+  #  This makes an undirected graph, so inverse links are also added. The graph
+  #  stays undirected; if you add more links with g.connect('B', 'C', 3), then
+  #  inverse link is also added.  You can use g.nodes() to get a list of nodes,
+  #  g.get('A') to get a dict of links out of A, and g.get('A', 'B') to get the
+  #  length of the link from A to B.  'Lengths' can actually be any object at 
+  #  all, and nodes can be any hashable object.
+  
+  def initialize(dict=nil, directed=true)
+    @dict = dict || {}
+    @directed = directed
+    make_undirected unless directed
+  end
+  
+  def make_undirected
+    #Make a digraph into an undirected graph by adding symmetric edges.
+    
+    @dict.each_key do |a|
+      @dict[a].each_pair do |b, distance|
+        connect1 b, a, distance
+      end
+    end
+  end
+  
+  def connect(a, b, distance=1)
+    # Add a link from A and B of given distance, and also add the inverse
+    # link if the graph is undirected.
+    
+    connect1 a, b, distance
+    connect1(b, a, distance) unless @directed
+  end
+  
+  def connect1(a, b, distance)
+    # Add a link from A to B of given distance, in one direction only.
+    
+    unless @dict.has_key? a
+      @dict[a] = {}
+    end
+    @dict[a][b] = distance
+  end
+  
+  def get(a, b=nil)
+    # Return a link distance or a dict of {node: distance} entries.
+    # .get(a,b) returns the distance or None;
+    # .get(a) returns a dict of {node: distance} entries, possibly {}.
+    
+    unless @dict.has_key? a
+      @dict[a] = {}
+    end
+    links = @dict
+    if b.nil?
+      return links
+    else
+      return links[b]
+    end
+  end
+  
+  def nodes
+    # Return a list of nodes in the graph.
+    return @dict.keys
+  end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
