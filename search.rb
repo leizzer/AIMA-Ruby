@@ -488,6 +488,191 @@ class Graph
   end
 end
 
+def undirectedGraph(dict=nil)
+  # Build a Graph where every edge (including future ones) goes both ways.
+  
+  return Graph.new(dict, false)
+end
+
+def randomGraph(nodes=(0..10).to_a, min_links=2, width=400, height=300, curvature=lambda{uniform_rand(1.1, 1.5)})
+  # Construct a random graph, with the specified nodes, and random links.
+  # The nodes are laid out randomly on a (width x height) rectangle.
+  # Then each node is connected to the min_links nearest neighbors.
+  # Because inverse links are added, some nodes will have more connections.
+  # The distance between nodes is the hypotenuse times curvature(),
+  # where curvature() defaults to a random number between 1.1 and 1.5.
+  
+  g = undirectedGraph
+  ## singleton
+  def g.locations
+    @locations
+  end
+  def g.locations=(value)
+    @locations = value
+  end
+  ## end singleton
+  g.locations = {}
+  ## Build the cities
+  nodes.each do |node|
+    g.locations[node] = [rand(width), rand(height)]
+  end
+  ## Build roads from each city to at least min_links nearest neighbors.
+  (0..min_links).times do |i|
+    nodes.each do |node|
+      if g[node].length < min_links
+        here = g.locations[node]
+        def distance_to_node(n)
+          if node == n || (g[node] || n)
+            return $infinity
+          end
+          return distance(g.locations[n], here)
+        end
+        neighbor = argmin(nodes, distance_to_node)
+        d = distance(g.locations[neighbor], here) * curvature
+        g.connect node, neighbor, Integer(d)
+      end
+    end
+  end
+  return g
+end
+
+romania = undirectedGraph({
+                          "A"=>{"Z"=>75, "S"=>140, "T"=>118},
+                          "B"=>{"U"=>85, "P"=>101, "G"=>90, "F"=>211},
+                          "C"=>{"D"=>120, "R"=>146, "P"=>138},
+                          "D"=>{"M"=>75},
+                          "E"=>{"H"=>86},
+                          "F"=>{"S"=>99},
+                          "H"=>{"U"=>98},
+                          "I"=>{"V"=>92, "N"=>87},
+                          "L"=>{"T"=>111, "M"=>70},
+                          "O"=>{"Z"=>71, "S"=>151},
+                          "P"=>{"R"=>97},
+                          "R"=>{"S"=>80},
+                          "U"=>{"V"=>142}
+                          })
+## singleton
+def romania.locations
+  @locations
+end
+def romania.locations=(value)
+  @locations = value
+end
+## end singleton
+romania.locations = {
+                    "A"=>[ 91, 492],    "B"=>[400, 327],    "C"=>[253, 288],   "D"=>[165, 299], 
+                    "E"=>[562, 293],    "F"=>[305, 449],    "G"=>[375, 270],   "H"=>[534, 350],
+                    "I"=>[473, 506],    "L"=>[165, 379],    "M"=>[168, 339],   "N"=>[406, 537], 
+                    "O"=>[131, 571],    "P"=>[320, 368],    "R"=>[233, 410],   "S"=>[207, 457], 
+                    "T"=>[ 94, 410],    "U"=>[456, 350],    "V"=>[509, 444],   "Z"=>[108, 531]
+                    }
+
+australia = undirectedGraph({
+    "T"=>{},
+    "SA"=>{"WA"=>1, "NT"=>1, "Q"=>1, "NSW"=>1, "V"=>1},
+    "NT"=>{"WA"=>1, "Q"=>1},
+    "NSW"=>{"Q"=>1, "V"=>1}})
+## singleton
+def australia.locations
+  @locations
+end
+def australia.locations=(value)
+  @locations = value
+end
+## end singleton
+australia.locations = {"WA"=>[120, 24], "NT"=>[135, 20], "SA"=>[135, 30], 
+                           "Q"=>[145, 20], "NSW"=>[145, 32], "T"=>[145, 42], "V"=>[145, 37]}
+                           
+class GraphProblem < Problem
+  # The problem of searching a graph from one node to another.
+  def initialize(initial, goal, graph)
+    super
+    @graph = graph
+  end
+  
+  def successor(a)
+    # Return a list of (action, result) pairs.
+    return @graph[a].each_key.map{|b| [b,b]}
+  end
+  
+  def path_cost(cost_so_far, a, action, b)
+    return cost_so_far + ((@graph[a] || b) || $infinity)
+  end
+  
+  def h(node)
+    # h function is straight-line distance from a node's state to goal.
+    locs = (@graph.respond_to? :locations) ? @graph.locations : nil
+    if locs
+      return Integer(distance(locs[node.state], locs[@goal]))
+    else
+      return $infinity
+    end
+  end
+end
+
+#########################################################################
+
+#### NOTE: NQueensProblem not working properly yet.
+
+class NQueensProblem < Problem
+  # The problem of placing N queens on an NxN board with none attacking
+  # each other.  A state is represented as an N-element array, where the
+  # a value of r in the c-th entry means there is a queen at column c,
+  # row r, and a value of None means that the c-th column has not been
+  # filled in left.  We fill in columns left to right.
+  
+  def initialize(n)
+    @n = n
+    @initial = [nil] * n
+  end
+  
+  def successor(state)
+    # In the leftmost empty column, try all non-conflicting rows.
+    unless state[-1].nil?
+      return []
+    else 
+      def place(col, row)
+        new_ = state.clone
+        new_[col] = row
+        return new_
+      end
+      col = state.index(nil)
+      return (0..@n).times.map{|row| [row, place(col,row)] if not conflicted(state, row, col)}
+    end
+  end
+  
+  def conflicted(state, row, col)
+    # Would placing a queen at (row, col) conflict with anything?
+    (0..(col-1)).times do |c|
+      if conflict(row, col, state[c], c)
+        return true
+      end
+    end
+    return false
+  end
+  
+  def conflict(row1, col1, row2, col2)
+    # Would putting two queens in (row1, col1) and (row2, col2) conflict?
+            ## same row     ## same column      ## same \ diagonal
+                                                ## same / diagona
+    ret = (row1 == row2) || (col1 == col2)    || (row1-col1 == row2-col2) || (row1+col1 == row2+col2)
+    return ret
+  end
+  
+  def goal_test(state)
+    # Check if all columns filled, no conflicts.
+    if state[-1].nil?
+      return false
+    end
+    (0..(state.length)).times do |c|
+      if conflicted(state, state[c], c)
+        return false
+      end
+    end
+    return true
+  end
+end
+
 
 
 
