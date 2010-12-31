@@ -1,6 +1,6 @@
 
 # Search (Chapters 3-4)
-# 
+#
 # The way to use this code is to subclass Problem to create a class of problems,
 # then create problem instances and solve them with calls to the various search
 # functions.
@@ -29,36 +29,36 @@ class Problem
     # The constructor specifies the initial state, and possibly a goal
     # state, if there is a unique goal.  Your subclass's constructor can add
     # other arguments.
-    
+
     @initial = initial
     @goal = goal
   end
-  
+
   def successor(state)
     # Given a state, return a sequence of (action, state) pairs reachable
     # from this state. If there are many successors, consider an iterator
     # that yields the successors one at a time, rather than building them
     # all at once. Iterators will work fine within the framework.
   end
-  
+
   def goal_test(state)
     # Return True if the state is a goal. The default method compares the
     # state to self.goal, as specified in the constructor. Implement this
     # method if checking against a single self.goal is not enough.
-    
+
     state == @goal
   end
-  
+
   def path_cost(c, state1, action, state2)
     # Return the cost of a solution path that arrives at state2 from
     # state1 via action, assuming cost c to get up to state1. If the problem
     # is such that the path doesn't matter, this function will only look at
     # state2.  If the path does matter, it will consider c and maybe state1
-    # and action. The default method costs 1 for every step in the path.    
-    
+    # and action. The default method costs 1 for every step in the path.
+
     c + 1
   end
-  
+
   def value
     # For optimization problems, each state has a value.  Hill-climbing
     # and related algorithms try to maximize this value.
@@ -78,38 +78,38 @@ class Node
   # subclass this class.
 
   attr_reader :state, :parent, :action, :path_cost, :depth
-   
+
   def initialize(state, parent=nil, action=nil, path_cost=0)
     # Create a search tree Node, derived from a parent by an action.
-    
+
     @state = state
     @parent = parent
     @action = action
     @path_cost = path_cost
     @depth = 0
-    
+
     if parent
       @depth = parent.depth + 1
-    end      
+    end
   end
-  
+
   def to_s
     "<Node #{@state}>"
   end
-  
+
   def path
     # Create a list of nodes from the root to this node.
     x, result = self, [self]
-    
+
     while x.parent
       result << x.parent
       x = x.parent
     end
-    
+
     return result
   end
-  
-  
+
+
   def expand(problem)
     # Return a list of nodes reachable from this node. [Fig. 3.8]
     list = []
@@ -132,13 +132,13 @@ class SimpleProblemSolvingAgent < Agent
 
     def program(percept)
       state = self.update_state(state, percept)
-      
-      if not seq:
+
+      if not seq
         goal = self.formulate_goal(state)
         problem = self.formulate_problem(state, goal)
         seq = self.search(problem)
       end
-      
+
       action = seq[0]
       seq[0,1] = []
       return action
@@ -153,7 +153,7 @@ def tree_search(problem, fringe)
   # Search through the successors of a problem to find a goal.
   # The argument fringe should be an empty queue.
   # Don't worry about repeated paths to a state. [Fig. 3.8]
-  fringe << Node.new(problem.initial)  
+  fringe << Node.new(problem.initial)
   while not fringe.empty?
     node = fringe.pop
     if problem.goal_test node.state
@@ -178,7 +178,7 @@ def graph_search(problem, fringe)
   # Search through the successors of a problem to find a goal.
   # The argument fringe should be an empty queue.
   # If two paths reach a state, only use the best one. [Fig. 3.18]
-  
+
   closed = {}
   fringe << Node.new(problem.initial)
   while not fringe.empty?
@@ -186,13 +186,13 @@ def graph_search(problem, fringe)
     if problem.goal_test node.state
       return node
     end
-    
+
     unless closed.include? node.state
       closed[node.state] = true
       fringe.concat node.expand(problem)
     end
   end
-  
+
   return nil
 end
 
@@ -200,7 +200,7 @@ def breadth_first_graph_search(problem)
   # Search the shallowest nodes in the search tree first. [p 74]
   return graph_search(problem, FIFOQueue.new)
 end
-    
+
 def depth_first_graph_search(problem)
   # Search the deepest nodes in the search tree first. [p 74]
   return graph_search(problem, stack)
@@ -258,18 +258,18 @@ def best_first_graph_search(problem, f)
   #f = memoize(f, '@f')
   return graph_search(problem, PriorityQueue.new(:min, f))
 end
-  
+
 greedy_best_first_graph_search = method :best_first_graph_search
   # Greedy best-first search is accomplished by specifying f(n) = h(n).
-  
+
 def astar_search(problem, h=nil)
   # A* search is best-first graph search with f(n) = g(n)+h(n).
   # You need to specify the h function when you call astar_search.
   # Uses the pathmax trick: f(n) = max(f(n), g(n)+h(n)).
   h = h or problem.method(:h)
-  
+
   f = proc{|n| [(n.respond_to?(:f) ? n.method(:f) : -$infinity), n.path_cost + h.call(n)].max}
-  
+
   return best_first_graph_search(problem, f)
 end
 
@@ -308,7 +308,7 @@ end
 def hill_climbing(problem)
   # From the initial node, keep choosing the neighbor with highest value,
   # stopping when no neighbor is better. [Fig. 4.11]
-  
+
   current = Node.new problem.initial
   loop do
     neighbor = argmax expand(node, problem), Node.method(:value)
@@ -342,13 +342,13 @@ end
 
 def online_dfs_agent(a)
   # [Fig. 4.12]
-  
+
   ### more
 end
 
 def lrta_star_agent(a)
   # [Fig. 4.12]
-  
+
   #### more
 end
 
@@ -358,7 +358,7 @@ def genetic_search(problem, fitness_fn, ngen=1000, pmut=0.0, n=20)
   # reasonable states, and that it has a path_cost function that scores states.
   # We use the negative of the path_cost function, because costs are to be
   # minimized, while genetic-algorithm expects a fitness_fn to be maximized.
-  
+
   states = problem.successor(problem.initial_state)[0..n].map {|a, s| s}
   states.shuffle!
   fitness_fn = lambda{|s| - problem.path_cost(0, s, nil, s)}
@@ -371,7 +371,7 @@ def genetic_algorithm(population, fitness_fn, ngen=1000, pmut=0.0)
     c = rand p1.length
     return p1[0..c] + p2[c..p2.length]
   end
-  
+
   (9..ngen).each do |i|
     new_population = []
     population.length.times do |i|
@@ -392,10 +392,10 @@ def random_weighted_selection(seg, n, weight_fn)
   # That is, apply weight_fn to each element of seq, add up the total.
   # Then choose an element e with probability weight[e]/total.
   # Repeat n times, with replacement.
-  
+
   totals = []
   runningtotal = 0
-  
+
   seq.each do |item|
     runningtotal += weight_fn itm
     totals << runningtotal
@@ -422,7 +422,7 @@ end
 class Graph
   #  A graph connects nodes (verticies) by edges (links).  Each edge can also
   #  have a length associated with it.  The constructor call is something like:
-  #      g = Graph({'A': {'B': 1, 'C': 2})   
+  #      g = Graph({'A': {'B': 1, 'C': 2})
   #  this makes a graph with 3 nodes, A, B, and C, with an edge of length 1 from
   #  A to B,  and an edge of length 2 from A to C.  You can also do:
   #      g = Graph({'A': {'B': 1, 'C': 2}, directed=False)
@@ -430,47 +430,47 @@ class Graph
   #  stays undirected; if you add more links with g.connect('B', 'C', 3), then
   #  inverse link is also added.  You can use g.nodes() to get a list of nodes,
   #  g.get('A') to get a dict of links out of A, and g.get('A', 'B') to get the
-  #  length of the link from A to B.  'Lengths' can actually be any object at 
+  #  length of the link from A to B.  'Lengths' can actually be any object at
   #  all, and nodes can be any hashable object.
-  
+
   def initialize(dict=nil, directed=true)
     @dict = dict || {}
     @directed = directed
     make_undirected unless directed
   end
-  
+
   def make_undirected
     #Make a digraph into an undirected graph by adding symmetric edges.
-    
+
     @dict.each_key do |a|
       @dict[a].each_pair do |b, distance|
         connect1 b, a, distance
       end
     end
   end
-  
+
   def connect(a, b, distance=1)
     # Add a link from A and B of given distance, and also add the inverse
     # link if the graph is undirected.
-    
+
     connect1 a, b, distance
     connect1(b, a, distance) unless @directed
   end
-  
+
   def connect1(a, b, distance)
     # Add a link from A to B of given distance, in one direction only.
-    
+
     unless @dict.has_key? a
       @dict[a] = {}
     end
     @dict[a][b] = distance
   end
-  
+
   def get(a, b=nil)
     # Return a link distance or a dict of {node: distance} entries.
     # .get(a,b) returns the distance or None;
     # .get(a) returns a dict of {node: distance} entries, possibly {}.
-    
+
     unless @dict.has_key? a
       @dict[a] = {}
     end
@@ -481,7 +481,7 @@ class Graph
       return links[b]
     end
   end
-  
+
   def nodes
     # Return a list of nodes in the graph.
     return @dict.keys
@@ -490,7 +490,7 @@ end
 
 def undirectedGraph(dict=nil)
   # Build a Graph where every edge (including future ones) goes both ways.
-  
+
   return Graph.new(dict, false)
 end
 
@@ -501,7 +501,7 @@ def randomGraph(nodes=(0..10).to_a, min_links=2, width=400, height=300, curvatur
   # Because inverse links are added, some nodes will have more connections.
   # The distance between nodes is the hypotenuse times curvature(),
   # where curvature() defaults to a random number between 1.1 and 1.5.
-  
+
   g = undirectedGraph
   ## singleton
   def g.locations
@@ -560,10 +560,10 @@ def romania.locations=(value)
 end
 ## end singleton
 romania.locations = {
-                    "A"=>[ 91, 492],    "B"=>[400, 327],    "C"=>[253, 288],   "D"=>[165, 299], 
+                    "A"=>[ 91, 492],    "B"=>[400, 327],    "C"=>[253, 288],   "D"=>[165, 299],
                     "E"=>[562, 293],    "F"=>[305, 449],    "G"=>[375, 270],   "H"=>[534, 350],
-                    "I"=>[473, 506],    "L"=>[165, 379],    "M"=>[168, 339],   "N"=>[406, 537], 
-                    "O"=>[131, 571],    "P"=>[320, 368],    "R"=>[233, 410],   "S"=>[207, 457], 
+                    "I"=>[473, 506],    "L"=>[165, 379],    "M"=>[168, 339],   "N"=>[406, 537],
+                    "O"=>[131, 571],    "P"=>[320, 368],    "R"=>[233, 410],   "S"=>[207, 457],
                     "T"=>[ 94, 410],    "U"=>[456, 350],    "V"=>[509, 444],   "Z"=>[108, 531]
                     }
 
@@ -580,25 +580,25 @@ def australia.locations=(value)
   @locations = value
 end
 ## end singleton
-australia.locations = {"WA"=>[120, 24], "NT"=>[135, 20], "SA"=>[135, 30], 
+australia.locations = {"WA"=>[120, 24], "NT"=>[135, 20], "SA"=>[135, 30],
                            "Q"=>[145, 20], "NSW"=>[145, 32], "T"=>[145, 42], "V"=>[145, 37]}
-                           
+
 class GraphProblem < Problem
   # The problem of searching a graph from one node to another.
   def initialize(initial, goal, graph)
     super
     @graph = graph
   end
-  
+
   def successor(a)
     # Return a list of (action, result) pairs.
     return @graph[a].each_key.map{|b| [b,b]}
   end
-  
+
   def path_cost(cost_so_far, a, action, b)
     return cost_so_far + ((@graph[a] || b) || $infinity)
   end
-  
+
   def h(node)
     # h function is straight-line distance from a node's state to goal.
     locs = (@graph.respond_to? :locations) ? @graph.locations : nil
@@ -620,17 +620,17 @@ class NQueensProblem < Problem
   # a value of r in the c-th entry means there is a queen at column c,
   # row r, and a value of None means that the c-th column has not been
   # filled in left.  We fill in columns left to right.
-  
+
   def initialize(n)
     @n = n
     @initial = [nil] * n
   end
-  
+
   def successor(state)
     # In the leftmost empty column, try all non-conflicting rows.
     unless state[-1].nil?
       return []
-    else 
+    else
       def place(col, row)
         new_ = state.clone
         new_[col] = row
@@ -640,7 +640,7 @@ class NQueensProblem < Problem
       return (0..@n).times.map{|row| [row, place(col,row)] if not conflicted(state, row, col)}
     end
   end
-  
+
   def conflicted(state, row, col)
     # Would placing a queen at (row, col) conflict with anything?
     (0..(col-1)).times do |c|
@@ -650,7 +650,7 @@ class NQueensProblem < Problem
     end
     return false
   end
-  
+
   def conflict(row1, col1, row2, col2)
     # Would putting two queens in (row1, col1) and (row2, col2) conflict?
             ## same row     ## same column      ## same \ diagonal
@@ -658,7 +658,7 @@ class NQueensProblem < Problem
     ret = (row1 == row2) || (col1 == col2)    || (row1-col1 == row2-col2) || (row1+col1 == row2+col2)
     return ret
   end
-  
+
   def goal_test(state)
     # Check if all columns filled, no conflicts.
     if state[-1].nil?
@@ -673,10 +673,109 @@ class NQueensProblem < Problem
   end
 end
 
+################################################################################
+## Inverse Boggle: Search for a high-scoring Boggle board. A good domain for
+## iterative-repair and related search tehniques, as suggested by Justin Boyan.
 
+ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
+cubes16 = ['FORIXB', 'MOQABJ', 'GURILW', 'SETUPL',
+           'CMPDAE', 'ACITAO', 'SLCRAE', 'ROMASH',
+           'NODESW', 'HEFIYE', 'ONUDTK', 'TEVIGN',
+           'ANEDVZ', 'PINESH', 'ABILYT', 'GKYLEU']
 
+def random_boggle(n=4)
+  # Return a random Boggle board of size n x n.
+  # We represent a board as a linear list of letters.
 
+  cubes = [(0..n*n).map{|i| cubes16[i % 16] }]
+  cubes.shuffle!
+  return cubes.map{|c| c[rand(c.length)]}
+end
+
+## The best 5x5 board found by Boyan, with our word list this board scores
+## 2274 words, for a score of 9837
+
+boyan_best = %w{R S T C S D E I A E G N L R P E A T E S M S S I D}
+
+def print_boggle(board)
+  # Print the board in 2-d array.
+
+  n2 = board.length
+  n = exact_sqrt n2
+
+  (0..n2).times do |i|
+    if i % n == 0
+      print
+    end
+    if board[i] == 'Q'
+      print 'Qu'
+    else
+      print board[i].to_s + ' '
+    end
+    print
+  end
+end
+
+def boggle_neighbors(n2, cache={})
+  # Return a list of lists, where the i-th element is the list of indexes
+  # for the neighbors of square i.
+
+  if cache.has_key? n2
+    return cache[n2]
+  end
+
+  n = exact_sqrt n2
+
+  neighbors = [nil] * n2
+
+  (0..n2).times do |i|
+    neighbors[i] = []
+    on_top = i < n
+    on_bottom = i >= ( n2 - n )
+    on_left = i % n == 0
+    on_right = (i + 1) % n == 0
+    unless on_top
+      neighbors[i] << (i - n)
+      unless on_left
+        neighbors[i] << (i - n - 1)
+      end
+      unless on_right
+        neighbors[i] << (i - n + 1)
+      end
+    end
+    unless on_bottom
+      neighbors[i] << (i + n)
+      unless on_left
+        neighbors[i] << (i + n - 1)
+      end
+      unless on_right
+        neighbors[i] << (i + n + 1)
+      end
+    end
+    unless on_left
+      neighbors[i] << (i - 1)
+    end
+    unless on_right
+      neighbors[i] << (i + 1)
+    end
+  end
+
+  cache[n2] = neighbors
+  returns neighbors
+end
+
+def exact_sqrt(n2)
+  # if n2 is a perfect square, return its square root, else raise error.
+  include Math
+  n = Math.sqrt(n2).to_i
+
+  if n * n == n2
+    return n
+  else
+    raise "The number is not a perfect square."
+  end
+end
 
 
 
