@@ -16,7 +16,7 @@ require 'search'
 ##                                                                             ##
 #################################################################################
 
-#Estado inicial [misioneros_izq, canivales_izq, misioneros_der, misioneros_der, posicion de la balsa]
+#Initial State [misioneros_izq, canivales_izq, misioneros_der, misioneros_der, posicion de la balsa]
 INITIAL_STATE = [3, 3, 0, 0, :i]
 OBJETIVE = [0, 0, 3, 3, :d]
 
@@ -51,6 +51,6 @@ class P_Misioneros < Problem
   end
 end
 
-#EJECUCION
+#EJECUTION
 pp = P_Misioneros.new INITIAL_STATE
 puts breadth_first_tree_search(pp)
