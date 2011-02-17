@@ -52,6 +52,6 @@ class P_Misioneros < Problem
   end
 end
 
-#EJECUTION
+#EXECUTION
 pp = P_Misioneros.new INITIAL_STATE
 puts breadth_first_tree_search(pp)
