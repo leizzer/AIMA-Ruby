@@ -16,7 +16,8 @@ require 'search'
 ##                                                                             ##
 #################################################################################
 
-#Initial State [misioneros_izq, canivales_izq, misioneros_der, misioneros_der, posicion de la balsa]
+#Estado Inicial [misioneros_izq, canivales_izq, misioneros_der, canivales_der, posicion_de_la_balsa]
+#Initial State [m_left, c_left, m_right, c_right, position_boat]
 INITIAL_STATE = [3, 3, 0, 0, :i]
 OBJETIVE = [0, 0, 3, 3, :d]
 
